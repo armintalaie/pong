@@ -44,7 +44,7 @@ public class EndGame {
         playAgain.setStyle("/*-fx-border-color: #000000;*/ -fx-background-color: #ffcc99 ;-fx-pref-width: 120;");
         playAgain.setLayoutX(endGame.getWidth()/2 - playAgain.getScaleX()/2 -30);
         playAgain.setLayoutY(endGame.getHeight()/2 - playAgain.getScaleY()/2+50);
-        playAgain.setOnMouseClicked(event ->  this.stage.setScene(new GameScene( game ,menu, stage ).scene));
+      //  playAgain.setOnMouseClicked(event ->  this.stage.setScene(new GameScene( game ,menu, stage ,  ).scene));
         root.getChildren().add(playAgain);
 ////////////////////////////////////////////////////////////////
         Button goToMenu = new Button("menu");

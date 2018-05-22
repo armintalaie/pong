@@ -11,17 +11,15 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
-
-import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Menu implements  Serializable {
+public class Menu {
     private Stage stage ;
     private Group root = new Group();
     private Scene menuScene = new Scene(root , 1100 , 600);
     private ArrayList<Player> players = new ArrayList<>();
     private ArrayList<Game> games = new ArrayList<>();
-    Menu(Stage stage , int server){
+    Menu(Stage stage , boolean isServer){
         this.stage = stage;
         menuScene.setFill(Color.valueOf("#95CCDD"));
         newGame();
@@ -29,36 +27,9 @@ public class Menu implements  Serializable {
         quitButton();
         startLabel();
         line();
-        multiPlayerButton(server);
         newPlayerButton();
+        multiPlayerButton(isServer);
 
-    }
-
-    private void multiPlayerButton(int server) {
-        Button multiPlayer = new Button("multiplayer");
-        multiPlayer.setFont(Font.font("arial" ,  FontWeight.EXTRA_BOLD , FontPosture.REGULAR , 15));
-        multiPlayer.setStyle(" -fx-pref-width: 120; -fx-arc-height: 1; -fx-arc-width: 100;    -fx-background-color: \n" +
-                "        #dd661c,\n" +
-                "        linear-gradient(#d6d6d6 50%, white 100%),\n" +
-                "        radial-gradient(center 50% -40%, radius 200%, #e6e6e6 45%, rgba(230,230,230,0) 50%);\n" +
-                "    -fx-background-radius: 30;\n" +
-                "    -fx-background-insets: 0,1,1;\n" +
-                "    -fx-text-fill: black;\n" +
-                "    -fx-effect: dropShadow( three-pass-box , rgba(0,0,0,0.6) , 3, 0.0 , 0 , 1 );\n");
-        multiPlayer.relocate(menuScene.getWidth()/2 - 50 , menuScene.getHeight()/2 +100);
-        root.getChildren().add(multiPlayer);
-        multiPlayer.setOnMouseClicked(event ->{
-            if(server == 0){
-                Server.getInstance().setMenu(this);
-                Server.getInstance().setStage(this.stage);
-                Server.getInstance().start();
-            }
-            else{
-                Client.getInstance().setMenu(this);
-                Client.getInstance().setStage(this.stage);
-                Client.getInstance().start();
-            }
-        });
     }
 
     public Scene getMenuScene() {
@@ -91,7 +62,7 @@ public class Menu implements  Serializable {
                 "    -fx-background-radius: 2;\n" +
                 "    -fx-background-insets: 0,1,1;\n" +
                 "    -fx-text-fill: black;\n" +
-                "    -fx-effect: dropShadow( three-pass-box , rgba(0,0,0,0.6) , 3, 0.0 , 0 , 1 );\n");
+                "    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 3, 0.0 , 0 , 1 );\n");
 
         root.getChildren().add(text2);
     }
@@ -283,7 +254,7 @@ public class Menu implements  Serializable {
 
     }
     private void goToGame(String gameName){
-        stage.setScene(new GameScene(findGame(gameName),this , stage).scene);
+        stage.setScene(new GameScene(findGame(gameName),this , stage , true).scene);
     }
 
     private void quitButton (){
@@ -352,10 +323,33 @@ public class Menu implements  Serializable {
         root.getChildren().add(newPlayer);
         newPlayer.setOnMouseClicked(event -> createPlayer());
     }
+    private void multiPlayerButton(boolean isServer) {
+        Button multiPlayer = new Button("multiplayer");
+        multiPlayer.setFont(Font.font("arial" ,  FontWeight.EXTRA_BOLD , FontPosture.REGULAR , 15));
+        multiPlayer.setStyle(" -fx-pref-width: 120; -fx-arc-height: 1; -fx-arc-width: 100;    -fx-background-color: \n" +
+                "        #dd661c,\n" +
+                "        linear-gradient(#d6d6d6 50%, white 100%),\n" +
+                "        radial-gradient(center 50% -40%, radius 200%, #e6e6e6 45%, rgba(230,230,230,0) 50%);\n" +
+                "    -fx-background-radius: 30;\n" +
+                "    -fx-background-insets: 0,1,1;\n" +
+                "    -fx-text-fill: black;\n" +
+                "    -fx-effect: dropShadow( three-pass-box , rgba(0,0,0,0.6) , 3, 0.0 , 0 , 1 );\n");
+        multiPlayer.relocate(menuScene.getWidth()/2 - 50 , menuScene.getHeight()/2 +100);
+        root.getChildren().add(multiPlayer);
+        multiPlayer.setOnMouseClicked(event ->{
+            if(isServer){
+                Server.getInstance().start(this , stage);
+                System.out.println("server launched");
+            }
+            else{
+                Client.getInstance().start(this , stage);
+            }
+        });
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Player implements Serializable{
+class Player {
     private String name;
     private int score = 0;
     private int gamesPlayed = 0;
@@ -393,7 +387,7 @@ class Player implements Serializable{
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class Game implements Serializable{
+class Game {
     private String name ;
     private Player player1;
     private Player player2;

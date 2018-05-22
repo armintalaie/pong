@@ -14,11 +14,13 @@ public class ExchangeData implements Runnable {
     public void run() {
         while (true) {
             try {
-                if(objectInputStream != null){
-                GameScene gameScene = (GameScene) objectInputStream.readObject();
-                receive.receive(gameScene);
-                }
+                System.out.println("pppppp");
+                    SavedData savedData = (SavedData) objectInputStream.readObject();
+                    System.out.println(savedData.awayBatY + " "+savedData.circleX + " " + savedData.homeBatY);
+                    receive.receive(savedData);
+
             } catch (Exception e) {
+
                 e.printStackTrace();
             }
         }

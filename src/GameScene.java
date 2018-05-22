@@ -10,87 +10,32 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-
 import java.io.Serializable;
 import java.util.Random;
 
-public class GameScene implements Serializable {
-    private static final long SerialVersionUID = 42L ;
-    transient private boolean a = false;
-    transient private boolean b = false;
-    transient private boolean c = false;
-    transient private boolean d = false;
+public class GameScene {
+    int armin  = 0;
+    private boolean a = false;
+    private boolean b = false;
+    private boolean c = false;
+    private boolean d = false;
     private Game game ;
-    private int homeGoal ;
-    private int awayGoal ;
-    transient private boolean down = false;
-    transient private boolean right = false;
-    transient private Menu menu ;
+     int homeGoal ;
+     int awayGoal ;
+    private boolean down = false;
+    private boolean right = false;
+    private Menu menu ;
     private long startTime;
-    transient private Stage stage ;
-    transient private boolean isServer = false;
-
+    private Stage stage ;
+     Rectangle away;
+     Rectangle home;
     private Timeline timeline = new Timeline();
     private Group root = new Group();
-    transient private Circle  circle ;
-     double circleX ;
-     double circleY;
-     double circleRadius;
-    private Rectangle home ;
-    private Rectangle away ;
+     Circle circle ;
+    private SavedData savedData ;
     Scene scene = new Scene(root , 1100 , 600);
-    GameScene (Player player1 , Player player2 , Menu menu , Stage stage , int homeGoal , int awayGoal , double circleX ,double circleY ,double circleRadius, Rectangle home , Rectangle away){
-        this.homeGoal=homeGoal;
-        this.awayGoal=awayGoal;
-        root.setStyle("-fx-background-color: #95CCDD");
-        scene.setFill(Color.valueOf("#95CCDD"));
-        this.startTime = System.currentTimeMillis();
-        this.menu = menu;
-        this.game = new Game( player1 , player2 , " ");
-        this.stage = stage;
-        createMiddleLine();
-        this.home = home;
-        this.away = away;
-        createCircle();
-        this.circle.setRadius(circleRadius);
-        this.circle.setCenterX(circleX);
-        this.circle.setCenterY(circleY);
-        root.getChildren().add(this.away);
-        root.getChildren().add(this.home);
-        Label time = timelabel();
-        root.getChildren().add(time);
-        Text homeText = createScoreBoard(true);
-        Text awayText =createScoreBoard(false);
-        noName2 ( home ,  away ,  time ,  homeText ,  awayText);
-    }
 
-
-    GameScene (Player player1 , Player player2 , Menu menu , Stage stage , int homeGoal , int awayGoal , Rectangle home , Rectangle away){
-        this.homeGoal=homeGoal;
-        this.awayGoal=awayGoal;
-        root.setStyle("-fx-background-color: #95CCDD");
-        scene.setFill(Color.valueOf("#95CCDD"));
-        this.startTime = System.currentTimeMillis();
-        this.menu = menu;
-        this.game = new Game( player1 , player2 , " ");
-        this.stage = stage;
-        createMiddleLine();
-        this.home = home;
-        this.away = away;
-        root.getChildren().add(this.away);
-        root.getChildren().add(this.home);
-        createCircle();
-        Label time = timelabel();
-        root.getChildren().add(time);
-        Text homeText = createScoreBoard(true);
-        Text awayText =createScoreBoard(false);
-        isServer = true;
-        noName ( home ,  away ,  time ,  homeText ,  awayText);
-    }
-
-
-
-    GameScene (Game game , Menu menu , Stage stage){
+    GameScene (Game game , Menu menu , Stage stage , boolean isServer){
         homeGoal=0;
         awayGoal=0;
         root.setStyle("-fx-background-color: #95CCDD");
@@ -100,8 +45,8 @@ public class GameScene implements Serializable {
         this.game = game;
         this.stage = stage;
         createMiddleLine();
-        Rectangle away = createRectangle(false);
-        Rectangle home = createRectangle(true);
+         away = createRectangle(false);
+         home = createRectangle(true);
         root.getChildren().add(away);
         root.getChildren().add(home);
         createCircle();
@@ -109,10 +54,10 @@ public class GameScene implements Serializable {
         root.getChildren().add(time);
         Text homeText = createScoreBoard(true);
         Text awayText =createScoreBoard(false);
-        noName ( home ,  away ,  time ,  homeText ,  awayText);
+        noName (  time ,  homeText ,  awayText , isServer , savedData);
     }
 
-    GameScene (Game game , Menu menu , Stage stage , long startTime , int homeGoal , int awayGoal){
+    GameScene (Game game , Menu menu , Stage stage , long startTime , int homeGoal , int awayGoal, boolean isServer ){
         this.homeGoal= homeGoal;
         this.awayGoal = awayGoal;
         root.setStyle("-fx-background-color: #95CCDD");
@@ -128,11 +73,12 @@ public class GameScene implements Serializable {
         root.getChildren().add(away);
         root.getChildren().add(home);
         createCircle();
+        savedData = new SavedData(homeGoal , awayGoal  ,circle.getCenterX(),circle.getCenterY()  , home.getX() , home.getY() , away.getX() , away.getY());
         Label time = timelabel();
         root.getChildren().add(time);
         Text homeText = createScoreBoard(true);
         Text awayText =createScoreBoard(false);
-        noName ( home ,  away ,  time ,  homeText ,  awayText);
+        noName (  time ,  homeText ,  awayText , isServer , savedData);
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -147,8 +93,7 @@ public class GameScene implements Serializable {
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void noName (Rectangle home , Rectangle away , Label time , Text homeText , Text awayText ) {
-
+    private void noName (  Label time , Text homeText , Text awayText , boolean isServer, SavedData savedData) {
 
         Random random = new Random();
         if( random.nextInt(200) % 2 == 1)
@@ -163,40 +108,42 @@ public class GameScene implements Serializable {
         awayText.setText(game.getPlayer2().getName()+" : "+awayGoal);
         time.setText(Long.toString((System.currentTimeMillis() - startTime) / 1000));
         timeline.setCycleCount(Timeline.INDEFINITE);
-        KeyFrame keyFrame = new KeyFrame(Duration.millis(0), event -> {
+        KeyFrame keyFrame = new KeyFrame(Duration.millis(5), event -> {
             {
                 scene.setOnKeyPressed(event1 -> {
                     if(event1.getCode().toString().equals("ESCAPE"))
                         stage.setScene(menu.getMenuScene());
-                    if(event1.getCode().toString().equals("W"))
-                        a=true;
-                    if(event1.getCode().toString().equals("S"))
-                        b=true;
-                    if(event1.getCode().toString().equals("I"))
-                        c=true;
-                    if(event1.getCode().toString().equals("K"))
-                        d=true;
+                    if(isServer){
+                        if(event1.getCode().toString().equals("W"))
+                            a=true;
+                        if(event1.getCode().toString().equals("S"))
+                            b=true;}
+                    else{
+                        if(event1.getCode().toString().equals("I"))
+                            c=true;
+                        if(event1.getCode().toString().equals("K"))
+                            d=true;}
                     if(event1.getCode().toString().matches("SPACE"))
                         stage.setScene(new PauseGame(game ,  menu ,  stage ,  startTime ,System.currentTimeMillis(),  homeGoal ,  awayGoal, timeline).getScene() );
                 });
                 scene.setOnKeyReleased(event1 -> {
+                    if(isServer){
                     if(event1.getCode().toString().equals("W"))
                         a=false;
                     if(event1.getCode().toString().equals("S"))
-                        b=false;
+                        b=false;}
+                        else{
                     if(event1.getCode().toString().equals("I"))
                         c=false;
                     if(event1.getCode().toString().equals("K"))
-                        d=false;
+                        d=false;}
                 });
-
-
 
 
                 homeText.setText(game.getPlayer1().getName()+" : "+homeGoal);
                 awayText.setText(game.getPlayer2().getName()+" : "+awayGoal);
                 time.setText(Long.toString((System.currentTimeMillis() - startTime) / 1000));
-
+                if(isServer){
                 if(circle.getCenterY() == 0  ){
                     down = true;
                 }
@@ -205,7 +152,7 @@ public class GameScene implements Serializable {
                 }
                 if(circle.getCenterX() == 0  ){
                     awayGoal++;
-                    if(awayGoal == 5)
+                    if(awayGoal == 500)
                         stage.setScene(new EndGame(stage , game , game.getPlayer2(), game.getPlayer1()  ,menu , timeline).getEndGame());
                     circle.setCenterX(scene.getWidth()/2);
                     circle.setCenterY(scene.getHeight()/2);
@@ -219,7 +166,7 @@ public class GameScene implements Serializable {
                 }
                 if(circle.getCenterX() == scene.getWidth() -1){
                     homeGoal++;
-                    if(homeGoal == 5)
+                    if(homeGoal == 500)
                         stage.setScene(new EndGame(stage , game , game.getPlayer1() , game.getPlayer2() ,menu,timeline).getEndGame());
                     circle.setCenterX(scene.getWidth()/2);
                     circle.setCenterY(scene.getHeight()/2);
@@ -244,16 +191,15 @@ public class GameScene implements Serializable {
                     }
 
                 }
-                circleRadius = circle.getRadius();
-                circleX = circle.getCenterX();
-                circleY = circle.getCenterY();
-                if(isServer)
-                    Server.getInstance().sendData();
+            }}
+            if(isServer)
+                Server.getInstance().sendData(new SavedData(homeGoal , awayGoal  ,circle.getCenterX(),circle.getCenterY()  , home.getX() , home.getY() ,away.getX() , away.getY()));
+            else
+                Client.getInstance().sendData(new SavedData(homeGoal , awayGoal  ,circle.getCenterX(),circle.getCenterY()  , home.getX() , home.getY() ,away.getX() , away.getY()));
 
-            }
         });
         timeline.getKeyFrames().add(keyFrame);
-        KeyFrame move = new KeyFrame(Duration.millis(2) , event -> {
+        KeyFrame move = new KeyFrame(Duration.millis(1) , event -> {
 
             if(down && right){
                 circle.setCenterX(circle.getCenterX()+1+(System.currentTimeMillis() - startTime) / 100000);
@@ -272,13 +218,14 @@ public class GameScene implements Serializable {
                 circle.setCenterX(circle.getCenterX()-1-(System.currentTimeMillis() - startTime) / 100000);
                 circle.setCenterY(circle.getCenterY()-1-(System.currentTimeMillis() - startTime) / 100000);
             }
-        });
+
+});
         timeline.getKeyFrames().add(move);
         KeyFrame bats = new KeyFrame(Duration.millis(1), event -> {
 
 
             if(a){
-                System.out.println("batss");
+
                 if(!d && !c)
                     moveUP(home , scene);
                 if(c){
@@ -289,7 +236,7 @@ public class GameScene implements Serializable {
                     moveDown(away , scene); }
             }
             if(b){
-                System.out.println("batss");
+
                 if(d){
                     moveDown(home , scene);
                     moveDown(away , scene); }
@@ -304,11 +251,35 @@ public class GameScene implements Serializable {
                 moveUP(away , scene);
             if(d && !b && !a && !c)
                 moveDown(away , scene);
-            Server.getInstance().sendData(this);
-            timeline.stop();
+            if(isServer)
+                updateServerMap(this.savedData);
+            else
+                updateClientMap(this.savedData);
         });
         timeline.getKeyFrames().add(bats);
         timeline.play();
+    }
+
+    public void updateServerMap(SavedData savedData ) {
+        away.setX(savedData.awayBatX);
+        away.setY(savedData.awayBatY);
+    }
+    public void updateClientMap(SavedData savedData ) {
+
+        System.out.println(home.getY()+"\\\\\\\\"+ armin);
+        System.out.println(savedData.homeBatY+"\\\\\\\\");
+        home.setY(savedData.homeBatX);
+        System.out.println(home.getY()+"::::::::::::"+armin);
+        System.out.println(savedData.homeBatY+"::::::::::::");
+        circle.setCenterX(savedData.circleX);
+        circle.setCenterY(savedData.circleY);
+        awayGoal = savedData.awayGoal;
+        homeGoal = savedData.homeGoal;
+
+
+    }
+    public void set(SavedData savedData){
+        this.savedData= savedData;
 
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -407,101 +378,32 @@ public class GameScene implements Serializable {
 
     }
 
-    public int getHomeGoal() {
-        return homeGoal;
+}
+
+class SavedData implements Serializable {
+     int homeGoal;
+     int awayGoal ;
+     double circleX ;
+     double circleY ;
+     double homeBatX ;
+     double homeBatY ;
+     double awayBatX ;
+     double awayBatY ;
+
+    SavedData(int homeGoal,int awayGoal ,double circleX , double circleY  ,double homeBatX , double homeBatY ,double awayBatX , double awayBatY){
+        update(homeGoal , awayGoal, circleX , circleY ,homeBatX,homeBatY,awayBatX,awayBatY);
     }
 
-    public int getAwayGoal() {
-        return awayGoal;
-    }
-    private  void noName2 (Rectangle home , Rectangle away , Label time , Text homeText , Text awayText){
+    private void update( int homeGoal,int awayGoal ,double circleX ,double circleY ,double homeBatX , double homeBatY ,double awayBatX , double awayBatY){
+        this.awayBatX = awayBatX ;
+        this.awayBatY = awayBatY;
+        this.awayGoal = awayGoal;
 
-        homeText.setText(game.getPlayer1().getName()+" : "+homeGoal);
-        awayText.setText(game.getPlayer2().getName()+" : "+awayGoal);
-        time.setText(Long.toString((System.currentTimeMillis() - startTime) / 1000));
-        timeline.setCycleCount(Timeline.INDEFINITE);
-        KeyFrame keyFrame = new KeyFrame(Duration.millis(0), event -> {
-            {
-                scene.setOnKeyPressed(event1 -> {
-                    if(event1.getCode().toString().equals("ESCAPE"))
-                        stage.setScene(menu.getMenuScene());
-                    if(event1.getCode().toString().equals("W"))
-                        a=true;
-                    if(event1.getCode().toString().equals("S"))
-                        b=true;
-                    if(event1.getCode().toString().equals("K"))
-                        d=true;
-                    if(event1.getCode().toString().equals("I"))
-                        c=true;
+        this.homeGoal = homeGoal;
+        this.homeBatX = homeBatX;
+        this.homeBatY = homeBatY;
 
-                    if(event1.getCode().toString().matches("SPACE"))
-                        stage.setScene(new PauseGame(game ,  menu ,  stage ,  startTime ,System.currentTimeMillis(),  homeGoal ,  awayGoal, timeline).getScene() );
-                });
-                scene.setOnKeyReleased(event1 -> {
-                    if(event1.getCode().toString().equals("S"))
-                        b=false;
-                    if(event1.getCode().toString().equals("W"))
-                        a=false;
-
-                    if(event1.getCode().toString().equals("I"))
-                        c=false;
-                    if(event1.getCode().toString().equals("K"))
-                        d=false;
-                });
-
-                homeText.setText(game.getPlayer1().getName()+" : "+homeGoal);
-                awayText.setText(game.getPlayer2().getName()+" : "+awayGoal);
-                time.setText(Long.toString((System.currentTimeMillis() - startTime) / 1000));
-
-            }
-        });
-        timeline.getKeyFrames().add(keyFrame);
-
-        KeyFrame bats = new KeyFrame(Duration.millis(1), event -> {
-            if(a){
-
-                if(!d && !c)
-                    moveUP(home , scene);
-                if(c){
-                    moveUP(home , scene);
-                    moveUP(away,scene); }
-                if(d){
-                    moveUP(home , scene);
-                    moveDown(away , scene); }
-            }
-            if(b){
-
-                if(d){
-                    moveDown(home , scene);
-                    moveDown(away , scene); }
-                if(c){
-                    moveDown(home , scene);
-                    moveUP(away , scene); }
-
-                if(!d && !c)
-                    moveDown(home , scene);
-            }
-            if(c && !b && !a && !d)
-                moveUP(away , scene);
-            if(d && !b && !a && !c)
-                moveDown(away , scene);
-            Client.getInstance().sendData(this);
-        });
-        timeline.getKeyFrames().add(bats);
-        timeline.play();
-
-
-    }
-
-    public Circle getCircle() {
-        return circle;
-    }
-
-    public Rectangle getHome() {
-        return home;
-    }
-
-    public Rectangle getAway() {
-        return away;
+        this.circleX = circleX;
+        this.circleY = circleY;
     }
 }

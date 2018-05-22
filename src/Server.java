@@ -7,7 +7,7 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class Server  implements Receive {
+public class Server implements Receive  {
 
     private Stage stage ;
     private static Server instance = new Server(900);
@@ -17,17 +17,21 @@ public class Server  implements Receive {
     private ObjectOutputStream outputStream;
     private ObjectInputStream inputStream;
 
+    private GameScene gameScene ;
     private Menu menu;
     public static Server getInstance() {
         return instance;
     }
-    public void start (){
+    public void start (Menu menu , Stage stage){
         try {
+            this.stage = stage;
+            this.menu = menu;
             setup();
             waitForClient();
             initIOStreams();
+            gameScene = new GameScene(new Game(new Player("1") , new Player("2")," ") ,  menu ,  stage , true);
             startThreads();
-            stage.setScene(new GameScene (new Game(new Player("server") ,new Player("client") , " ")  ,  menu ,  stage ).scene);
+            stage.setScene(gameScene.scene);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -56,31 +60,19 @@ public class Server  implements Receive {
         this.port = port;
     }
 
-    public void receive(GameScene gameScene) {
-        stage.setScene(new GameScene ( new Player("server") ,new Player("client") ,  menu ,  stage , gameScene.getHomeGoal() , gameScene.getAwayGoal(),gameScene.getHome() , gameScene.getAway()).scene);
-    }
-    public void sendData (GameScene gameScene){
+    public void sendData (SavedData savedData){
         try {
-            outputStream.writeObject(gameScene);
+            outputStream.writeObject(savedData);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public ObjectInputStream getInputStream() {
-        return inputStream;
-    }
 
-    public ObjectOutputStream getOutputStream() {
-        return outputStream;
-    }
-
-    public void setMenu(Menu menu) {
-        this.menu = menu;
-    }
-
-    public void setStage(Stage stage) {
-        this.stage = stage;
+    @Override
+    public void receive(SavedData savedData) {
+        gameScene.set(savedData);
+        //gameScene.updateServerMap(savedData);
     }
 }
 

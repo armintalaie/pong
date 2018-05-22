@@ -6,13 +6,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-public class Client  implements Receive{
+public class Client implements Receive  {
     private Stage stage;
     private static Client instance = new Client();
     private Socket clientSocket;
     private ObjectOutputStream outputStream;
     private ObjectInputStream inputStream;
-
+    private GameScene gameScene;
     private Menu menu ;
     private Client(){}
 
@@ -21,32 +21,31 @@ public class Client  implements Receive{
         return instance;
     }
 
-    public void start(){
+    public void start(Menu menu , Stage stage){
         try {
+            this.stage = stage;
+            this.menu = menu;
+
             connect2Server();
             initIOStreams();
+            gameScene = new GameScene(new Game(new Player("1") , new Player("2")," ") ,  menu ,  stage , false);
             startThreads();
+            stage.setScene(gameScene.scene);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-    private void startThreads() {
-        new Thread(new ExchangeData(inputStream, this)).start();
-    }
-
     private void connect2Server() throws IOException {
         clientSocket = new Socket("localhost", 900);
 
     }
-    public void receive (GameScene gameScene){
-        stage.setScene(new GameScene(new Player(" ")  ,new Player(" ")  ,  menu ,  stage , gameScene.getHomeGoal(),gameScene.getAwayGoal() , gameScene.circleX ,gameScene.circleY ,gameScene.circleRadius, gameScene.getHome() ,gameScene.getAway()).scene);
-
+    private void startThreads() {
+        new Thread(new ExchangeData(inputStream, this)).start();
     }
 
-    public void sendData (GameScene gameScene){
+    public void sendData (SavedData savedData){
         try {
-            outputStream.writeObject(gameScene);
+            outputStream.writeObject(savedData);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -57,11 +56,8 @@ public class Client  implements Receive{
         inputStream = new ObjectInputStream(clientSocket.getInputStream());
     }
 
-    public void setStage(Stage stage) {
-        this.stage = stage;
-    }
-
-    public void setMenu(Menu menu) {
-        this.menu = menu;
+    public void receive(SavedData savedData) {
+        gameScene.set(savedData);
+        //gameScene.updateClientMap(savedData);
     }
 }

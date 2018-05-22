@@ -100,7 +100,7 @@ public class PauseGame {
                 "    -fx-effect: dropShadow( three-pass-box , rgba(0,0,0,0.6) , 3, 0.0 , 0 , 1 );\n");
         resume.relocate(scene.getWidth()/2 - 80 , scene.getHeight()/2-40 );
         root.getChildren().add(resume);
-        resume.setOnMouseClicked(event -> stage.setScene(new GameScene( game ,  menu ,  stage ,  currentTime - startTime ,  homeGoal ,  awayGoal).scene));
+        //resume.setOnMouseClicked(event -> stage.setScene(new GameScene( game ,  menu ,  stage ,  currentTime - startTime ,  homeGoal ,  awayGoal).scene));
     }
 
     private void saveButton (){
